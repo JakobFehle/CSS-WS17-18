@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1512408641727.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "83FF8AA0",
+    "lastKnownWriteTime" : 8391447967468910437,
+    "last_content_update" : 1512408641727,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "D33C6B6",
+        "caption" : "twitter_data_timeline",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=twitter_data_timeline&cache_key=D33C6B6",
+        "displayedObservations" : "282",
+        "environment" : "",
+        "object" : "twitter_data_timeline",
+        "preview" : "0",
+        "totalObservations" : "282",
+        "variables" : "4"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
