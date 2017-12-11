@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "install.packages(\"tidytext\")\ninstall.packages(\"topicmodels\")\ninstall.packages(\"tm\")\n\nrequire(\"tidyverse\")\nrequire(\"tidytext\")\nrequire(\"topicmodels\")\nrequire(\"tm\")\n\n#Wir laden die Funktion um sie in mutate zu verwenden\nsource(\"scripts/cleanTweetText.R\")\n#Wir lesen die Stopwortliste ein\nstopwords <- read_csv(\"data/stopwords.txt\", col_names = FALSE)\n\nprepare_for_LDA<-twitter_data_sample%>%filter(tokenCount>2)%>%\n  #author topic model / wir nehmen alle Tweets eines Autors \n  group_by(twitter.handle)%>%\n  summarise(newDoc=paste0(text,collapse=\" \"))%>%\n  ungroup()%>%mutate(newDoc=cleanTweetText(newDoc))%>%filter(str_count(newDoc)>3)\n\nprepare_for_LDA_tokens<-prepare_for_LDA%>%\n          unnest_tokens(input=newDoc,output=tokens,\n                token=stringr::str_split,pattern=\" \")                    \n\n# Lösche GERMAN Stopwords Lösche ENGLISH Stopwords\nprepare_for_LDA_tokens<-prepare_for_LDA_tokens%>%\n                anti_join(stopwords,by=c(\"tokens\"=\"X1\"))\n\n#Wir zählen alle Terme in den Dokumenten\nprepare_for_LDA_tokens<-prepare_for_LDA_tokens%>%\n                          count(twitter.handle,tokens,sort=TRUE)\n\n# Wir konvertieren unseren tidy df in ein docterm-objekt\ntokens_tm<-prepare_for_LDA_tokens%>%\n              cast_dtm(twitter.handle,tokens,n)\n#Wir betrachten das DT-Objekt\ntokens_tm\n#Wir trainieren unser Topic Model mit 5 topics und VEM\ntweets_topic_model<-LDA(tokens_tm,k=5,control = list(seed = 1234))\n#Wir konvertieren das LDA-Objekt zurück via tidy\ntidy_tweets_topic_model<-tidy(tweets_topic_model)\n\n#Wir holen uns die top 5 Terme \n#(= am wahrscheinlichsten von diesem Topic) eines jeden Topics\ntop_terms_tweets_topic_model<-tidy_tweets_topic_model%>%\n                                group_by(topic)%>%\n                                  top_n(5, beta)%>%\n                                    ungroup()%>%\n                                  arrange(topic, -beta)\n\n\n\nlda_gamma <- tidy(tweets_topic_model, matrix = \"gamma\")\nggplot(lda_gamma, aes(gamma))+\n  geom_histogram()+\n  scale_y_log10()+\n  labs(title = \"Distribution of probabilities for all topics\",\n       y = \"Number of documents\", x = expression(gamma))\n\n\nplot_topics<-top_terms_tweets_topic_model%>%\n  mutate(term=reorder(term,beta))%>%\n  group_by(topic,term)%>%\n  arrange(desc(beta))%>%ungroup%>%\n  mutate(term = factor(paste(term, topic, sep = \"__\"), \n                       levels = rev(paste(term, topic, sep = \"__\"))))\n\n\nggplot(data=plot_topics, mapping=aes(term, beta, fill = as.factor(topic))) +\n  geom_col(show.legend = FALSE) +\n  coord_flip() +\n  scale_x_discrete(labels = function(x) gsub(\"__.+$\", \"\", x)) +\n  labs(title = \"Top 10 terms in each LDA topic\",\n       x = NULL, y = expression(beta)) +\n  facet_wrap(~ topic, ncol = 5, scales = \"free\")\n\n\n\n\n\n\n\n\n",
+    "created" : 1512924148052.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3131074863",
+    "id" : "135B9478",
+    "lastKnownWriteTime" : 1511135316,
+    "last_content_update" : 1511135316,
+    "path" : "F:/Studium/CSS WS2017/scripts/topic_models.R",
+    "project_path" : null,
+    "properties" : {
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

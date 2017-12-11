@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "require(tidyverse)\nrequire(dplyr)\nlibrary(readr)\nsource(\"r scripts/cleanTweetText.R\")\n\ntwitter_data<-read_csv(\"D:/GitHub/CSS-WS17-18/data/twitter_data.csv\", \n                        locale = locale())\n\ntwitter_data_sentiment<-read_delim(\"D:/GitHub/CSS-WS17-18/data/Twitter_Sentiment_TrainData2.csv\", \n                                                                   \";\", escape_double = FALSE, trim_ws = TRUE)\ntwitter_data_sentiment<-twitter_data_sentiment%>%select(-c(Nummer))\n\ntwitter_data<-twitter_data%>%mutate(sentimentScore=NA)\ntwitter_data$text<-gsub(\",\",\" \",twitter_data$text)\ntwitter_data$text<-gsub(\";\",\" \",twitter_data$text)\ntwitter_data_frac<-twitter_data%>%sample_n(1000, replace=FALSE)\ntwitter_data_frac<-twitter_data_frac%>%select(ID,sentimentScore,text)\n\nwrite.table(twitter_data_frac, \"data/Twitter_Sentiment_TrainData.csv\", sep = \",\")\n",
+    "created" : 1512916653140.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1583707457",
+    "id" : "4A974DBA",
+    "lastKnownWriteTime" : 1512954761,
+    "last_content_update" : 1512954761233,
+    "path" : "D:/GitHub/CSS-WS17-18/r scripts/sentimentSample.R",
+    "project_path" : "r scripts/sentimentSample.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
