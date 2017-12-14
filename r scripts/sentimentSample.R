@@ -1,3 +1,7 @@
+install.packages("tidyverse")
+install.packages("dplyr")
+install.packages("readr")
+
 require(tidyverse)
 require(dplyr)
 library(readr)
@@ -24,4 +28,4 @@ twitter_data$text<-gsub(";"," ",twitter_data$text)
 twitter_data_frac<-twitter_data%>%sample_n(1000, replace=FALSE)
 twitter_data_frac<-twitter_data_frac%>%select(ID,sentimentScore,text)
 
-write.table(twitter_data_frac, "data/Twitter_Sentiment_TrainData.csv", sep = ",")
+write.table(twitter_data_frac, "data/Twitter_Sentiment_TrainData_David.csv", sep = ",")
