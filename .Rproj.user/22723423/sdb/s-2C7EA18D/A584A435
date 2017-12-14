@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "cleanHashtags<-function(hashtag){\n  require(stringr)\n  require(stringi)\n  \n  hashtag<-str_replace_all(hashtag,pattern=\"https\",replacement = \"\")\n  hashtag<-str_replace_all(hashtag,pattern=\"#\",replacement = \"\")\n  hashtag<-stri_replace_all_fixed(hashtag,\n                                  c(\"\\U00E4\",\"\\U00F6\",\"\\U00FC\",\"\\U00C4\",\"\\U00D6\",\"\\U00DC\"),\n                                  c(\"ae\", \"oe\", \"ue\", \"Ae\", \"Oe\", \"Ue\"),\n                                  vectorize_all = FALSE)\n  hashtag<-stri_trans_general(hashtag, \"latin-ascii\")\n  hashtag<-str_to_lower(hashtag)\n  return(hashtag)\n}",
+    "created" : 1513101174609.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2544914219",
+    "id" : "A584A435",
+    "lastKnownWriteTime" : 1511176216,
+    "last_content_update" : 1511176216,
+    "path" : "D:/GitHub/CSS-WS17-18/r scripts/cleanHashtags.R",
+    "project_path" : "r scripts/cleanHashtags.R",
+    "properties" : {
+    },
+    "relative_order" : 10,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

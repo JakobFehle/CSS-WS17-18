@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1513128853385.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "79802CE9",
+    "lastKnownWriteTime" : 0,
+    "last_content_update" : 1513128853385,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "2027A5C7",
+        "caption" : "twitter_data",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=twitter_data&cache_key=2027A5C7",
+        "displayedObservations" : 255307,
+        "environment" : "",
+        "object" : "twitter_data",
+        "preview" : 0,
+        "totalObservations" : 255307,
+        "variables" : 23
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
