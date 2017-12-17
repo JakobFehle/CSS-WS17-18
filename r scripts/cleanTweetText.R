@@ -13,10 +13,9 @@ cleanTweetText<-function(text){
   text<-str_replace_all(text,pattern="#",replacement="")
   #Konvertierung von Umlauten
   text<-stri_replace_all_fixed(text, 
-                                  c("Ã¤", "Ã¶", "Ã¼", "Ã„", "Ã–", "Ãœ"),
-                                 #c("\U00E4","\U00F6","\U00FC","\U00C4","\U00D6","\U00DC"),
-                                  c("ae", "oe", "ue", "Ae", "Oe", "Ue"), 
-                                  vectorize_all = FALSE)
+                                  #c("ä", "ö", "ü", "Ä", "Ö", "Ü"),
+                                 c("\U00E4","\U00F6","\U00FC","\U00C4","\U00D6","\U00DC"),
+                                  c("ae", "oe", "ue", "Ae", "Oe", "Ue"), vectorize_all = FALSE)
   #Entfernung von Emoticons
   text<-iconv(text, "latin1", "ASCII", sub="")
   #Zahlen auÃŸer IN Hashtags
