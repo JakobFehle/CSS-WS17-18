@@ -1,19 +1,21 @@
 cleanTweetText<-function(text){
   require(stringr)
   require(stringi)
-    url_pattern <- "http[s]?://t\\.co/[^ ]{10}"
     hashtag_pattern <- "#([[:alnum:]]|[_])+"
     mention_pattern <- "@([[:alnum:]]|[_])+"
     strip_RT_pattern<-"RT\\s@([[:alnum:]]|[_])+:"
 
   #Die URLs und Mentions werden entfernt
-  text<-str_replace_all(text,pattern=url_pattern,replacement = "")
   text<-str_replace_all(text,pattern=mention_pattern,replacement="")
+  #WÃ¶rter die weniger als 3 Zeichen haben mÃ¼ssen weg auÃŸer sie haben #
+  text<-str_replace_all(text,pattern="(?<!#)\\b[a-zA-Z0-9]{1,2}\\b",replacement = "")
   #depends on whether you wanna keep hashtags or not
   text<-str_replace_all(text,pattern="#",replacement="")
+  #Entfernung der Unicode Character <U+...>
+  test<-str_replace_all(text,pattern="\\<.?\\>",replacement="")
   #Konvertierung von Umlauten
   text<-stri_replace_all_fixed(text, 
-                                  #c("ä", "ö", "ü", "Ä", "Ö", "Ü"),
+                                  #c("?", "?", "?", "?", "?", "?"),
                                  c("\U00E4","\U00F6","\U00FC","\U00C4","\U00D6","\U00DC"),
                                   c("ae", "oe", "ue", "Ae", "Oe", "Ue"), vectorize_all = FALSE)
   #Entfernung von Emoticons
@@ -22,8 +24,6 @@ cleanTweetText<-function(text){
   text<-str_replace_all(text,pattern="\\b\\d+\\b",replacement="")
   #Satzzeichen und Special Characters auÃŸer # mÃ¼ssen weg
   text<-str_replace_all(text,pattern="[^[:alnum:]#]",replacement=" ")
-  #WÃ¶rter die weniger als 3 Zeichen haben mÃ¼ssen weg auÃŸer sie haben #
-  text<-str_replace_all(text,pattern="(?<!#)\\b[a-zA-Z0-9]{1,2}\\b",replacement = "")
   text<-str_to_lower(text)
   return(text)
 }
