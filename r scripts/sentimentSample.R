@@ -1,5 +1,6 @@
 require(tidyverse)
 require(dplyr)
+require(plyr)
 library(readr)
 library(SentimentAnalysis)
 library(SnowballC)
@@ -74,5 +75,7 @@ response<-as.numeric(as.character(twitter_data_sentiment_match$sentimentScore))
 dict<-generateDictionary(twitter_data_sentiment_match$text,response)
 
 dict<-generateDictionary(x,response,modelType = "lasso", filterTerms = NULL, control = list(),
-                         minWordLength = 3, sparsity = 0.9, weighting= function(x)
+                         minWordLength = 3, sparsity = 0.99999999, weighting= function(x)
                            tm::weightTfIdf(x, normalize = FALSE))
+
+
