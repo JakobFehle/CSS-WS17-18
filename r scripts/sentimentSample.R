@@ -58,7 +58,6 @@ twitter_data_sentiment_david_snd<-read_delim("data/SentimentAnalyseDavidzweiterD
 twitter_data_sentiment_jakob<-read_delim("data/SentimentAnalyseJakobMatchedFromDavid.csv", 
                                          ";", escape_double = FALSE, trim_ws = TRUE)
 
-colnames(twitter_data_sentiment_david_snd)<-c("sentimentScore","text")
 colnames(twitter_data_sentiment_jakob)<-c("Nummer","ID","isMatch","sentimentScore","text")
 twitter_data_sentiment_jakob<-twitter_data_sentiment_jakob[,c("Nummer","ID","sentimentScore","isMatch","text")]
 
@@ -94,6 +93,20 @@ twitter_data_sentiment_match<-twitter_data_sentiment_match%>%select("sentimentSc
 #Anfügen des zweiten Sentimentbewertungsdurchlauf
 
 twitter_data_sentiment_match<-rbind(twitter_data_sentiment_match, twitter_data_sentiment_david_snd)
+
+
+#Erstellen des CSV Datensatzs für die Dictornary-Erstellung
+write.table(twitter_data_sentiment_match, "data/SentimentForDict5LevelSkala.csv", sep = ",")
+
+#Einlesen der Baseline
+
+baseline_dict_level3<-read_delim("data/SentimentForDict3LevelSkala.csv", 
+                                         ";", escape_double = FALSE, trim_ws = TRUE)
+
+
+baseline_dict_level5<-read_delim("data/SentimentforDict5LevelSkala.csv", 
+                                 ";", escape_double = FALSE, trim_ws = FALSE)
+
 
 
 #Erstellen des Dictornary
