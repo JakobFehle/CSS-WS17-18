@@ -119,10 +119,12 @@ baseline_dict_level5<-read_delim("data/SentimentforDict5LevelSkala.csv",
 x_level3<-transformIntoCorpus(baseline_dict_level3$text)
 response_level3<-as.numeric(as.character(baseline_dict_level3$sentimenScore))
 
-dict_level3<-generateDictionary(x_level3,response_level3,modelType = "lasso", filterTerms = NULL, control = list(),
-                         minWordLength = 3, sparsity = 0.99999999, weighting= function(x)
+dict_level3<-generateDictionary(x_level3,response_level3,modelType = "enet", filterTerms = NULL, control = list(),
+                         minWordLength = 3, sparsity = 0.999999999999, weighting= function(x)
                            tm::weightTfIdf(x, normalize = TRUE))
 
+summary(dict_level3)
+dict_level3
 
 #only selecting the text column for sentiment analyses
 twitter_data_for_sentiment<-twitter_data%>%select("text")
@@ -135,8 +137,11 @@ twitter_data_for_sentiment<-twitter_data_for_sentiment%>%mutate(sentimentScore=N
 
 twitter_data_for_sentiment$sentimentScore<-sentiment
 
+
+
 plotSentiment(sentiment)
 hist(as.numeric(unlist(sentiment)))
+dict_level3
 #Erstellen des Dict auf Level 5 Baseline
 x_level5<-transformIntoCorpus(baseline_dict_level5$text)
 response_level5<-as.numeric(as.character(baseline_dict_level5$sentimentScore))
@@ -146,7 +151,7 @@ dict_level5<-generateDictionary(x_level5,response_level5,modelType = "lasso", fi
                                   tm::weightTfIdf(x, normalize = TRUE))
 
 
-                    
+compareDictionaries(dict_level3,dict_level5)                    
 
 dict_lasso_pol<-generateDictionary(xDM,response,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
                            tm::weightTfIdf(x, normalize = TRUE), language = "german")

@@ -22,5 +22,5 @@
 	- Vergleich intern 
 	- Vergleich baseline/Kappa
 	- Vergleich extern (SentiStrength, SentiWs)
-
+    - hashtaghijacking
 *Conclusion
