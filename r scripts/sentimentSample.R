@@ -10,7 +10,7 @@ source("r scripts/cleanTweetText.R")
 
 
 
-twitter_data<-read_csv("data/twitter_data.csv", 
+twitter_data<-read_csv("twitter data/twitter_data.csv", 
                         locale = locale())
 
 # Aufbereiten Twitter Datensatz
@@ -19,6 +19,8 @@ twitter_data<-twitter_data%>%filter(lang=="de" | lang == "da")
 #Entfernt alle Links (http(s) und alle Zeichen bis zum nächsten Leerzeichen)
 twitter_data$text<-gsub("http[s]?://t\\.co/[^ ]{10}","",twitter_data$text)
 twitter_data$text<-gsub("http.*[^\\s]+","",twitter_data$text)
+twitter_data$text<-gsub("https","",twitter_data$text)
+twitter_data$text<-gsub("http","",twitter_data$text)
 
 
 #Entfernt alle abgeschnittenen Links
@@ -41,16 +43,16 @@ twitter_data$text<-gsub(";"," ",twitter_data$text)
 twitter_data_frac<-twitter_data%>%sample_n(1000, replace=FALSE)
 twitter_data_frac<-twitter_data_frac%>%select(ID,sentimentScore,text)
 
-write.table(twitter_data_frac, "data/Twitter_Sentiment_TrainData.csv", sep = ",")
+write.table(twitter_data_frac, "twitter data/Twitter_Sentiment_TrainData.csv", sep = ",")
 
 
 ## Auswertung
 
 # Einlesen
-twitter_data_sentiment_david<-read_delim("data/SentimentAnalyseDavid.csv", 
+twitter_data_sentiment_david<-read_delim("twitter data/SentimentAnalyseDavid.csv", 
                                    ";", escape_double = FALSE, trim_ws = TRUE)
 
-twitter_data_sentiment_jakob<-read_delim("data/SentimentAnalyseJakobMatchedFromDavid.csv", 
+twitter_data_sentiment_jakob<-read_delim("twitter data/SentimentAnalyseJakobMatchedFromDavid.csv", 
                                          ";", escape_double = FALSE, trim_ws = TRUE)
 colnames(twitter_data_sentiment_jakob)<-c("Nummer","ID","isMatch","sentimentScore","text")
 twitter_data_sentiment_jakob<-twitter_data_sentiment_jakob[,c("Nummer","ID","sentimentScore","isMatch","text")]
@@ -61,9 +63,11 @@ twitter_data_sentiment<-rbind(twitter_data_sentiment_david,twitter_data_sentimen
 twitter_data_sentiment<-twitter_data_sentiment%>%select(-c(Nummer,ID))
 
 # Säubern
-twitter_data_sentiment$text<-gsub("http[s]?://t\\.co/[^ ]{10}","",twitter_data_sentiment$text)
+twitter_data_sentiment$text<-gsub("http[s]?\\://t\\.co/[^ ]{10}","",twitter_data_sentiment$text)
 twitter_data_sentiment$text<-gsub("http.*[^\\s]+","",twitter_data_sentiment$text)
 twitter_data_sentiment$text<-gsub("htt[p]?\U2026","",twitter_data_sentiment$text)
+twitter_data_sentiment$text<-gsub("https","",twitter_data_sentiment$text)
+twitter_data_sentiment$text<-gsub("http","",twitter_data_sentiment$text)
 twitter_data_sentiment<-twitter_data_sentiment[!grepl("\U2026", twitter_data_sentiment$text),]
 
 # Fehlerhaft bei ä,ü,ö
@@ -76,6 +80,8 @@ twitter_data_sentiment_match<-twitter_data_sentiment%>%filter(isMatch =="1")
 twitter_data_sentiment_match<-twitter_data_sentiment_match%>%mutate(sentimentScore = sub(",", ".", sentimentScore, fixed = TRUE))
 twitter_data_sentiment_match[,"sentimentScore"]<-sapply(twitter_data_sentiment_match[,"sentimentScore"],as.numeric)
 twitter_data_sentiment_match<-twitter_data_sentiment_match%>%filter(sentimentScore != "NA")
+twitter_data_sentiment_match<-twitter_data_sentiment_match%>%filter(sentimentScore != 0)
+twitter_data_sentiment_match<-twitter_data_sentiment_match%>%mutate(sentimentScore = sub("0.5","1", sentimentScore, fixed = TRUE))
 # Testweise join für orginalen Text
 # twitter_data_merge<-merge(x = twitter_data, y = twitter_data_sentiment, by = "text", all.x = TRUE)
 
@@ -83,11 +89,44 @@ twitter_data_sentiment_match<-twitter_data_sentiment_match%>%filter(sentimentSco
 x<-transformIntoCorpus(twitter_data_sentiment_match$text)
 response<-as.numeric(as.character(twitter_data_sentiment_match$sentimentScore))
 
-dict<-generateDictionary(twitter_data_sentiment_match$text,response)
+dict_lasso_pol<-generateDictionary(xDM,response,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+                           tm::weightTfIdf(x, normalize = TRUE), language = "german")
 
-dict<-generateDictionary(x,response,modelType = "lasso", filterTerms = NULL, control = list(),
-                         minWordLength = 3, sparsity = 0.99999999, weighting= function(x)
-                           tm::weightTfIdf(x, normalize = TRUE))
-summary(dict)
-dict
+dict_lm_pol<-generateDictionary(x,response,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+                              tm::weightTfIdf(x, normalize = TRUE), language = "german")
 
+dict_enet_pol<-generateDictionary(x,response,modelType = "enet", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+dict_ridge_pol<-generateDictionary(x,response,modelType = "ridge", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+summary(dict_lasso_pol)
+plot(dict_lasso_pol)
+plot(dict_lm_pol)
+plot(dict_enet_pol)
+plot(dict_ridge_pol)
+
+# Shit
+#twitter_data_exp<-twitter_data%>%select(c("ID","positveSentimentScore","negativeSentimentScore","text"))
+#twitter_data_exp$sentimentScore<-""
+#twitter_data_exp<-twitter_data_exp[c("ID","positveSentimentScore","negativeSentimentScore","sentimentScore","text")]
+
+#twitter_data_exp<-twitter_data_exp%>%arrange(desc(positveSentimentScore),desc(negativeSentimentScore))
+#twitter_data_exp_pos<-head(twitter_data_exp,200)
+#twitter_data_exp_pos<-twitter_data_exp[1:400,]
+#write.csv(twitter_data_exp_pos, "twitter data/ExampleTweetsSentiStrengthPos.csv")
+
+#twitter_data_exp<-twitter_data_exp%>%arrange(negativeSentimentScore,positveSentimentScore)
+#twitter_data_exp_neg<-head(twitter_data_exp,200)
+#write.csv(twitter_data_exp_neg, "twitter data/ExampleTweetsSentiStrengthNeg.csv")
+#twitter_data_exp_neg<-twitter_data_exp[201:400,]
+#write.csv(twitter_data_exp_neg, "twitter data/ExampleTweetsSentiStrengthNeg2.csv")
+
+
+# Umgehen von Stemming
+xDM<-toDocumentTermMatrix(x, language = "german", minWordLength = 3,
+                     sparsity = NULL, removeStopwords = TRUE, stemming = FALSE,
+                     weighting = function(x) tm::weightTfIdf(x, normalize = FALSE))
+
+# Korrekte dekodierung von <FC> etc in ü, ä, ö!
