@@ -109,15 +109,33 @@ baseline_dict_level5<-read_delim("data/SentimentforDict5LevelSkala.csv",
 
 
 
-#Erstellen des Dictornary
-x<-transformIntoCorpus(twitter_data_sentiment_match$text)
-response<-as.numeric(as.character(twitter_data_sentiment_match$sentimentScore))
+#Erstellen des Dictornary auf Level 3 Baseline
+x_level3<-transformIntoCorpus(baseline_dict_level3$text)
+response_level3<-as.numeric(as.character(baseline_dict_level3$sentimenScore))
 
-dict<-generateDictionary(twitter_data_sentiment_match$text,response)
-
-dict<-generateDictionary(x,response,modelType = "lasso", filterTerms = NULL, control = list(),
+dict_level3<-generateDictionary(x_level3,response_level3,modelType = "lasso", filterTerms = NULL, control = list(),
                          minWordLength = 3, sparsity = 0.99999999, weighting= function(x)
                            tm::weightTfIdf(x, normalize = TRUE))
-summary(dict)
-dict
 
+
+#only selecting the text column for sentiment analyses
+twitter_data_for_sentiment<-twitter_data%>%select("text")
+
+sentiment <-predict(dict_level3,twitter_data_for_sentiment)
+
+
+summary(dict_level3)
+summary(dict_level5)
+plot(dict_level3)
+
+
+#Erstellen des Dict auf Level 5 Baseline
+x_level5<-transformIntoCorpus(baseline_dict_level5$text)
+response_level5<-as.numeric(as.character(baseline_dict_level5$sentimentScore))
+
+dict_level5<-generateDictionary(x_level5,response_level5,modelType = "lasso", filterTerms = NULL, control = list(),
+                                minWordLength = 3, sparsity = 0.99999999, weighting= function(x)
+                                  tm::weightTfIdf(x, normalize = TRUE))
+
+
+                    
