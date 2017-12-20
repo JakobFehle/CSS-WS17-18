@@ -43,19 +43,28 @@ twitter_data_frac<-twitter_data_frac%>%select(ID,sentimentScore,text)
 
 write.table(twitter_data_frac, "data/Twitter_Sentiment_TrainData.csv", sep = ",")
 
+#Schreiben der Tabelle für zweiten Bewertungsdurchlauf
+write.table(twitter_data_frac, "data/Twitter_Sentiment_TrainData_zweiterDurchlauf.csv", sep = ",")
+
 
 ## Auswertung
 
 # Einlesen
 twitter_data_sentiment_david<-read_delim("data/SentimentAnalyseDavid.csv", 
                                    ";", escape_double = FALSE, trim_ws = TRUE)
+twitter_data_sentiment_david_snd<-read_delim("data/SentimentAnalyseDavidzweiterDurchlauf.csv",";"
+                                           ,escape_double = FALSE, trim_ws =TRUE)
 
 twitter_data_sentiment_jakob<-read_delim("data/SentimentAnalyseJakobMatchedFromDavid.csv", 
                                          ";", escape_double = FALSE, trim_ws = TRUE)
+
+colnames(twitter_data_sentiment_david_snd)<-c("sentimentScore","text")
 colnames(twitter_data_sentiment_jakob)<-c("Nummer","ID","isMatch","sentimentScore","text")
 twitter_data_sentiment_jakob<-twitter_data_sentiment_jakob[,c("Nummer","ID","sentimentScore","isMatch","text")]
 
 twitter_data_sentiment<-rbind(twitter_data_sentiment_david,twitter_data_sentiment_jakob)
+
+
 
 # Spalten Säubern (ID leider verfälscht)
 twitter_data_sentiment<-twitter_data_sentiment%>%select(-c(Nummer,ID))
@@ -79,7 +88,15 @@ twitter_data_sentiment_match<-twitter_data_sentiment_match%>%filter(sentimentSco
 # Testweise join für orginalen Text
 # twitter_data_merge<-merge(x = twitter_data, y = twitter_data_sentiment, by = "text", all.x = TRUE)
 
+#Entfernen der isMatch Spalte
+twitter_data_sentiment_match<-twitter_data_sentiment_match%>%select("sentimentScore", "text")
 
+#Anfügen des zweiten Sentimentbewertungsdurchlauf
+
+twitter_data_sentiment_match<-rbind(twitter_data_sentiment_match, twitter_data_sentiment_david_snd)
+
+
+#Erstellen des Dictornary
 x<-transformIntoCorpus(twitter_data_sentiment_match$text)
 response<-as.numeric(as.character(twitter_data_sentiment_match$sentimentScore))
 
