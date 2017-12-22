@@ -8,67 +8,29 @@ library(tm)
 library(spikeslab)
 source("r scripts/cleanTweetText.R")
 
-
-
-twitter_data<-read_csv("twitter data/twitter_data.csv", 
-                        locale = locale())
-
-# Aufbereiten Twitter Datensatz
-twitter_data<-twitter_data%>%filter(lang=="de" | lang == "da")
-
-#Entfernt alle Links (http(s) und alle Zeichen bis zum nächsten Leerzeichen)
-twitter_data$text<-gsub("http[s]?://t\\.co/[^ ]{10}","",twitter_data$text)
-twitter_data$text<-gsub("http.*[^\\s]+","",twitter_data$text)
-twitter_data$text<-gsub("https","",twitter_data$text)
-twitter_data$text<-gsub("http","",twitter_data$text)
-
-
-#Entfernt alle abgeschnittenen Links
-twitter_data$text<-gsub("htt[p]?\U2026","",twitter_data$text)
-
-#Entfernen von abgeschnittenen Tweets
-twitter_data<-twitter_data[!grepl("\U2026", twitter_data$text),]
-
-#CleanTweetText auf den gesamten Twitter Datensatz
-twitter_data<-twitter_data%>%mutate(text=cleanTweetText(text))
-
-# Aufbereiten für Random Sample
-twitter_data<-twitter_data%>%mutate(sentimentScore=NA)
-
-# NUR FÜR EXCEL!
-twitter_data$text<-gsub(","," ",twitter_data$text)
-twitter_data$text<-gsub(";"," ",twitter_data$text)
-
-# Random Sample
-twitter_data_frac<-twitter_data%>%sample_n(1000, replace=FALSE)
-twitter_data_frac<-twitter_data_frac%>%select(ID,sentimentScore,text)
-
-write.table(twitter_data_frac, "twitter data/Twitter_Sentiment_TrainData.csv", sep = ",")
-
-#Schreiben der Tabelle für zweiten Bewertungsdurchlauf
-write.table(twitter_data_frac, "data/Twitter_Sentiment_TrainData_zweiterDurchlauf.csv", sep = ",")
-
-
 ## Auswertung
 
 # Einlesen
-twitter_data_sentiment_david<-read_delim("twitter data/SentimentAnalyseDavid.csv", 
-                                   ";", escape_double = FALSE, trim_ws = TRUE)
+
+twitter_data_sentiment<-read_delim("twitter data/SentimentAnalyse#1.csv",";"
+                                   ,escape_double = FALSE, trim_ws =TRUE)
+
 twitter_data_sentiment_david_snd<-read_delim("data/SentimentAnalyseDavidzweiterDurchlauf.csv",";"
                                            ,escape_double = FALSE, trim_ws =TRUE)
 
-twitter_data_sentiment_jakob<-read_delim("twitter data/SentimentAnalyseJakobMatchedFromDavid.csv", 
+twitter_data_sentiment_jakob_snd<-read_delim("twitter data/SentimentAnalyse#2.csv", 
                                          ";", escape_double = FALSE, trim_ws = TRUE)
 
-colnames(twitter_data_sentiment_jakob)<-c("Nummer","ID","isMatch","sentimentScore","text")
-twitter_data_sentiment_jakob<-twitter_data_sentiment_jakob[,c("Nummer","ID","sentimentScore","isMatch","text")]
 
-twitter_data_sentiment<-rbind(twitter_data_sentiment_david,twitter_data_sentiment_jakob)
+colnames(twitter_data_sentiment_david_snd)<-c("sentimentScore","text")
+twitter_data_sentiment<-twitter_data_sentiment%>%select(-c(ID))
+twitter_data_sentiment_jakob_snd<-twitter_data_sentiment_jakob_snd%>%select(-c(X1,ID,positveSentimentScore,negativeSentimentScore))
+twitter_data_sentiment_jakob_snd<-twitter_data_sentiment_jakob_snd%>%filter(sentimentScore != "NA")
+twitter_data_sentiment_jakob_snd$isMatch<-"1"
+twitter_data_sentiment_david_snd$isMatch<-"1"
 
+twitter_data_sentiment<-rbind(twitter_data_sentiment,twitter_data_sentiment_jakob_snd,twitter_data_sentiment_david_snd)
 
-
-# Spalten Säubern (ID leider verfälscht)
-twitter_data_sentiment<-twitter_data_sentiment%>%select(-c(Nummer,ID))
 
 # Säubern
 twitter_data_sentiment$text<-gsub("http[s]?\\://t\\.co/[^ ]{10}","",twitter_data_sentiment$text)
@@ -79,53 +41,187 @@ twitter_data_sentiment$text<-gsub("http","",twitter_data_sentiment$text)
 twitter_data_sentiment<-twitter_data_sentiment[!grepl("\U2026", twitter_data_sentiment$text),]
 
 # Fehlerhaft bei ä,ü,ö
+twitter_data_sentiment$text<-gsub("<e4>","ä",twitter_data_sentiment$text)
+twitter_data_sentiment$text<-gsub("<c4>","Ä",twitter_data_sentiment$text)
+twitter_data_sentiment$text<-gsub("<d6>","Ö",twitter_data_sentiment$text)
+twitter_data_sentiment$text<-gsub("<dc>","Ü",twitter_data_sentiment$text)
+twitter_data_sentiment$text<-gsub("<f6>","ö",twitter_data_sentiment$text)
+twitter_data_sentiment$text<-gsub("<fc>","ü",twitter_data_sentiment$text)
+
+twitter_data_sentiment$text<-gsub("<[^\\s]+>","",twitter_data_sentiment$text)
+twitter_data_sentiment$text<-gsub("<[^\\s]+","",twitter_data_sentiment$text)
+
+twitter_data_sentiment$text<-gsub("&amp;","",twitter_data_sentiment$text)
 twitter_data_sentiment<-twitter_data_sentiment%>%mutate(text=cleanTweetText(text))
+
+# Umwandeln der Scores in numeric mit "."
+twitter_data_sentiment<-twitter_data_sentiment%>%filter(sentimentScore != "NA")
+twitter_data_sentiment<-twitter_data_sentiment%>%mutate(sentimentScore = sub(",", ".", sentimentScore, fixed = TRUE))
+twitter_data_sentiment$sentimentScore<-as.numeric(as.character(twitter_data_sentiment$sentimentScore))
+
 
 # Nur Matches der Kreuzvalid.
 twitter_data_sentiment_match<-twitter_data_sentiment%>%filter(isMatch =="1")
 
-# Umwandeln der Scores in numeric mit "."
-twitter_data_sentiment_match<-twitter_data_sentiment_match%>%mutate(sentimentScore = sub(",", ".", sentimentScore, fixed = TRUE))
-twitter_data_sentiment_match[,"sentimentScore"]<-sapply(twitter_data_sentiment_match[,"sentimentScore"],as.numeric)
-twitter_data_sentiment_match<-twitter_data_sentiment_match%>%filter(sentimentScore != "NA")
-twitter_data_sentiment_match<-twitter_data_sentiment_match%>%filter(sentimentScore != 0)
-twitter_data_sentiment_match<-twitter_data_sentiment_match%>%mutate(sentimentScore = sub("0.5","1", sentimentScore, fixed = TRUE))
-# Testweise join für orginalen Text
-# twitter_data_merge<-merge(x = twitter_data, y = twitter_data_sentiment, by = "text", all.x = TRUE)
-
-#Entfernen der isMatch Spalte
-twitter_data_sentiment_match<-twitter_data_sentiment_match%>%select("sentimentScore", "text")
-
-#Anfügen des zweiten Sentimentbewertungsdurchlauf
-
-twitter_data_sentiment_match<-rbind(twitter_data_sentiment_match, twitter_data_sentiment_david_snd)
 
 
-#Erstellen des CSV Datensatzs für die Dictornary-Erstellung
-write.table(twitter_data_sentiment_match, "data/SentimentForDict5LevelSkala.csv", sep = ",")
+##########
+## 5 Level
+##########
 
-#Einlesen der Baseline
+twitter_data_sentiment_5lvl<-twitter_data_sentiment_match
+twitter_data_sentiment_5lvl<-twitter_data_sentiment_5lvl%>%select("sentimentScore", "text")
 
-baseline_dict_level3<-read_delim("data/SentimentForDict3LevelSkala.csv", 
-                                         ";", escape_double = FALSE, trim_ws = TRUE)
+write.csv(twitter_data_sentiment_5lvl, "data/SentimentAnalyse_5LevelDict")
+
+x5<-transformIntoCorpus(twitter_data_sentiment_5lvl$text)
+xDTM5<-toDocumentTermMatrix(x5, language = "german", minWordLength = 3,
+                          sparsity = NULL, removeStopwords = TRUE, stemming = FALSE,
+                          weighting = function(x) tm::weightTfIdf(x, normalize = FALSE))
+response5<-twitter_data_sentiment_5lvl$sentimentScore
+
+dict_lasso5<-generateDictionary(xDTM5,response5,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+dict_lm5<-generateDictionary(xDTM5,response5,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+dict_enet5<-generateDictionary(xDTM5,response5,modelType = "enet", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+dict_ridge5<-generateDictionary(xDTM5,response5,modelType = "ridge", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+summary(dict_lasso5)
+#dict_lasso5
+plot(dict_lasso5)
+
+summary(dict_lm5)
+#dict_lm5
+plot(dict_lm5)
+
+summary(dict_enet5)
+#dict_enet5
+plot(dict_enet5)
+
+summary(dict_ridge5)
+#dict_ridge5
+plot(dict_ridge5)
+
+write(dict_lasso5, "dictionarys/lasso-5level.dict")
+write(dict_lm5, "dictionarys/lm-5level.dict")
+write(dict_enet5, "dictionarys/enet-5level.dict")
+write(dict_ridge5, "dictionarys/ridge-5level.dict")
 
 
-baseline_dict_level5<-read_delim("data/SentimentforDict5LevelSkala.csv", 
-                                 ";", escape_double = FALSE, trim_ws = FALSE)
+
+
+###########
+## 3 Level
+###########
+
+twitter_data_sentiment_3lvl<-twitter_data_sentiment_match%>%mutate(sentimentScore = sub("0.5","1.0", sentimentScore, fixed = TRUE))
+twitter_data_sentiment_3lvl<-twitter_data_sentiment_3lvl%>%select("sentimentScore", "text")
+twitter_data_sentiment_3lvl$sentimentScore<-as.numeric(as.character(twitter_data_sentiment_3lvl$sentimentScore))
+
+write.csv(twitter_data_sentiment_3lvl, "data/SentimentAnalyse_3LevelDict")
+
+x3<-transformIntoCorpus(twitter_data_sentiment_3lvl$text)
+xDTM3<-toDocumentTermMatrix(x3, language = "german", minWordLength = 3,
+                            sparsity = NULL, removeStopwords = TRUE, stemming = FALSE,
+                            weighting = function(x) tm::weightTfIdf(x, normalize = FALSE))
+response3<-twitter_data_sentiment_3lvl$sentimentScore
+
+dict_lasso3<-generateDictionary(xDTM3,response3,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+dict_lm3<-generateDictionary(xDTM3,response3,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+dict_enet3<-generateDictionary(xDTM3,response3,modelType = "enet", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+dict_ridge3<-generateDictionary(xDTM3,response3,modelType = "ridge", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+summary(dict_lasso3)
+dict_lasso3
+plot(dict_lasso3)
+
+summary(dict_lm3)
+dict_lm3
+plot(dict_lm3)
+
+summary(dict_enet3)
+dict_enet3
+plot(dict_enet3)
+
+summary(dict_ridge3)
+dict_ridge3
+plot(dict_ridge3)
+
+write(dict_lasso3, "dictionarys/lasso-3level.dict")
+write(dict_lm3, "dictionarys/lm-3level.dict")
+write(dict_enet3, "dictionarys/enet-3level.dict")
+write(dict_ridge3, "dictionarys/ridge-3level.dict")
 
 
 
-#Erstellen des Dictornary auf Level 3 Baseline
-x_level3<-transformIntoCorpus(baseline_dict_level3$text)
-response_level3<-as.numeric(as.character(baseline_dict_level3$sentimenScore))
 
-dict_level3<-generateDictionary(x_level3,response_level3,modelType = "enet", filterTerms = NULL, control = list(),
-                         minWordLength = 3, sparsity = 0.999999999999, weighting= function(x)
-                           tm::weightTfIdf(x, normalize = TRUE))
+###########
+## 2 Level
+###########
 
-summary(dict_level3)
-dict_level3
+twitter_data_sentiment_2lvl<-twitter_data_sentiment_match%>%mutate(sentimentScore = sub("0.5","1", sentimentScore, fixed = TRUE))
+twitter_data_sentiment_2lvl<-twitter_data_sentiment_2lvl%>%filter(sentimentScore != 0)
+twitter_data_sentiment_2lvl<-twitter_data_sentiment_2lvl%>%select("sentimentScore", "text")
+twitter_data_sentiment_2lvl$sentimentScore<-as.numeric(as.character(twitter_data_sentiment_2lvl$sentimentScore))
 
+write.csv(twitter_data_sentiment_2lvl, "data/SentimentAnalyse_2LevelDict")
+
+x2<-transformIntoCorpus(twitter_data_sentiment_2lvl$text)
+xDTM2<-toDocumentTermMatrix(x2, language = "german", minWordLength = 3,
+                            sparsity = NULL, removeStopwords = TRUE, stemming = FALSE,
+                            weighting = function(x) tm::weightTfIdf(x, normalize = FALSE))
+response2<-twitter_data_sentiment_2lvl$sentimentScore
+
+dict_lasso2<-generateDictionary(xDTM2,response2,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+dict_lm2<-generateDictionary(xDTM2,response2,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+dict_enet2<-generateDictionary(xDTM2,response2,modelType = "enet", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+dict_ridge2<-generateDictionary(xDTM2,response2,modelType = "ridge", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
+  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+
+summary(dict_lasso2)
+dict_lasso2
+plot(dict_lasso2)
+
+summary(dict_lm2)
+dict_lm2
+plot(dict_lm2)
+
+summary(dict_enet2)
+dict_enet2
+plot(dict_enet2)
+
+summary(dict_ridge2)
+dict_ridge2
+plot(dict_ridge2)
+
+write(dict_lasso2, "dictionarys/lasso-2level.dict")
+write(dict_lm2, "dictionarys/lm-2level.dict")
+write(dict_enet2, "dictionarys/enet-2level.dict")
+write(dict_ridge2, "dictionarys/ridge-2level.dict")
+
+
+
+
+### Experimente
 #only selecting the text column for sentiment analyses
 twitter_data_for_sentiment<-twitter_data%>%select("text")
 
@@ -152,45 +248,3 @@ dict_level5<-generateDictionary(x_level5,response_level5,modelType = "lasso", fi
 
 
 compareDictionaries(dict_level3,dict_level5)                    
-
-dict_lasso_pol<-generateDictionary(xDM,response,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-                           tm::weightTfIdf(x, normalize = TRUE), language = "german")
-
-dict_lm_pol<-generateDictionary(x,response,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-                              tm::weightTfIdf(x, normalize = TRUE), language = "german")
-
-dict_enet_pol<-generateDictionary(x,response,modelType = "enet", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
-
-dict_ridge_pol<-generateDictionary(x,response,modelType = "ridge", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
-
-summary(dict_lasso_pol)
-plot(dict_lasso_pol)
-plot(dict_lm_pol)
-plot(dict_enet_pol)
-plot(dict_ridge_pol)
-
-# Shit
-#twitter_data_exp<-twitter_data%>%select(c("ID","positveSentimentScore","negativeSentimentScore","text"))
-#twitter_data_exp$sentimentScore<-""
-#twitter_data_exp<-twitter_data_exp[c("ID","positveSentimentScore","negativeSentimentScore","sentimentScore","text")]
-
-#twitter_data_exp<-twitter_data_exp%>%arrange(desc(positveSentimentScore),desc(negativeSentimentScore))
-#twitter_data_exp_pos<-head(twitter_data_exp,200)
-#twitter_data_exp_pos<-twitter_data_exp[1:400,]
-#write.csv(twitter_data_exp_pos, "twitter data/ExampleTweetsSentiStrengthPos.csv")
-
-#twitter_data_exp<-twitter_data_exp%>%arrange(negativeSentimentScore,positveSentimentScore)
-#twitter_data_exp_neg<-head(twitter_data_exp,200)
-#write.csv(twitter_data_exp_neg, "twitter data/ExampleTweetsSentiStrengthNeg.csv")
-#twitter_data_exp_neg<-twitter_data_exp[201:400,]
-#write.csv(twitter_data_exp_neg, "twitter data/ExampleTweetsSentiStrengthNeg2.csv")
-
-
-# Umgehen von Stemming
-xDM<-toDocumentTermMatrix(x, language = "german", minWordLength = 3,
-                     sparsity = NULL, removeStopwords = TRUE, stemming = FALSE,
-                     weighting = function(x) tm::weightTfIdf(x, normalize = FALSE))
-
-# Korrekte dekodierung von <FC> etc in ü, ä, ö!
