@@ -25,3 +25,6 @@ twitter_data<-twitter_data[!grepl("\U2026", twitter_data$text),]
 
 #CleanTweetText auf den gesamten Twitter Datensatz
 twitter_data<-twitter_data%>%mutate(text=cleanTweetText(text))
+
+# Stemming
+twitter_data$text<-apply(twitter_data[,"text"],1,function(x) stemTweetText(x))

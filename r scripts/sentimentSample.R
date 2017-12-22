@@ -13,13 +13,16 @@ source("r scripts/cleanTweetText.R")
 # Einlesen
 
 twitter_data_sentiment<-read_delim("twitter data/SentimentAnalyse#1.csv",";"
-                                   ,escape_double = FALSE, trim_ws =TRUE)
+                                   ,escape_double = FALSE, trim_ws =TRUE, 
+                                   locale = locale())
 
 twitter_data_sentiment_david_snd<-read_delim("data/SentimentAnalyseDavidzweiterDurchlauf.csv",";"
-                                           ,escape_double = FALSE, trim_ws =TRUE)
+                                           ,escape_double = FALSE, trim_ws =TRUE, 
+                                           locale = locale())
 
 twitter_data_sentiment_jakob_snd<-read_delim("twitter data/SentimentAnalyse#2.csv", 
-                                         ";", escape_double = FALSE, trim_ws = TRUE)
+                                         ";", escape_double = FALSE, trim_ws = TRUE, 
+                                         locale = locale())
 
 
 colnames(twitter_data_sentiment_david_snd)<-c("sentimentScore","text")
@@ -31,34 +34,16 @@ twitter_data_sentiment_david_snd$isMatch<-"1"
 
 twitter_data_sentiment<-rbind(twitter_data_sentiment,twitter_data_sentiment_jakob_snd,twitter_data_sentiment_david_snd)
 
-
-# Säubern
-twitter_data_sentiment$text<-gsub("http[s]?\\://t\\.co/[^ ]{10}","",twitter_data_sentiment$text)
-twitter_data_sentiment$text<-gsub("http.*[^\\s]+","",twitter_data_sentiment$text)
-twitter_data_sentiment$text<-gsub("htt[p]?\U2026","",twitter_data_sentiment$text)
-twitter_data_sentiment$text<-gsub("https","",twitter_data_sentiment$text)
-twitter_data_sentiment$text<-gsub("http","",twitter_data_sentiment$text)
-twitter_data_sentiment<-twitter_data_sentiment[!grepl("\U2026", twitter_data_sentiment$text),]
-
-# Fehlerhaft bei ä,ü,ö
-twitter_data_sentiment$text<-gsub("<e4>","ä",twitter_data_sentiment$text)
-twitter_data_sentiment$text<-gsub("<c4>","Ä",twitter_data_sentiment$text)
-twitter_data_sentiment$text<-gsub("<d6>","Ö",twitter_data_sentiment$text)
-twitter_data_sentiment$text<-gsub("<dc>","Ü",twitter_data_sentiment$text)
-twitter_data_sentiment$text<-gsub("<f6>","ö",twitter_data_sentiment$text)
-twitter_data_sentiment$text<-gsub("<fc>","ü",twitter_data_sentiment$text)
-
-twitter_data_sentiment$text<-gsub("<[^\\s]+>","",twitter_data_sentiment$text)
-twitter_data_sentiment$text<-gsub("<[^\\s]+","",twitter_data_sentiment$text)
-
-twitter_data_sentiment$text<-gsub("&amp;","",twitter_data_sentiment$text)
 twitter_data_sentiment<-twitter_data_sentiment%>%mutate(text=cleanTweetText(text))
 
 # Umwandeln der Scores in numeric mit "."
 twitter_data_sentiment<-twitter_data_sentiment%>%filter(sentimentScore != "NA")
+twitter_data_sentiment<-twitter_data_sentiment%>%filter(text != "")
 twitter_data_sentiment<-twitter_data_sentiment%>%mutate(sentimentScore = sub(",", ".", sentimentScore, fixed = TRUE))
 twitter_data_sentiment$sentimentScore<-as.numeric(as.character(twitter_data_sentiment$sentimentScore))
 
+# Stemming
+twitter_data_sentiment$text<-apply(twitter_data_sentiment[,"text"],1,function(x) stemTweetText(x))
 
 # Nur Matches der Kreuzvalid.
 twitter_data_sentiment_match<-twitter_data_sentiment%>%filter(isMatch =="1")
@@ -72,16 +57,14 @@ twitter_data_sentiment_match<-twitter_data_sentiment%>%filter(isMatch =="1")
 twitter_data_sentiment_5lvl<-twitter_data_sentiment_match
 twitter_data_sentiment_5lvl<-twitter_data_sentiment_5lvl%>%select("sentimentScore", "text")
 
-write.csv(twitter_data_sentiment_5lvl, "data/SentimentAnalyse_5LevelDict")
+#write.csv(twitter_data_sentiment_5lvl, "data/SentimentAnalyse_5LevelDict")
 
 x5<-transformIntoCorpus(twitter_data_sentiment_5lvl$text)
 xDTM5<-toDocumentTermMatrix(x5, language = "german", minWordLength = 3,
-                          sparsity = NULL, removeStopwords = TRUE, stemming = FALSE,
-                          weighting = function(x) tm::weightTfIdf(x, normalize = FALSE))
+                          sparsity = NULL, removeStopwords = TRUE, stemming = FALSE)
 response5<-twitter_data_sentiment_5lvl$sentimentScore
 
-dict_lasso5<-generateDictionary(xDTM5,response5,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+dict_lasso5<-generateDictionary(xDTM5,response5,modelType = "lasso", sparsity = 0.99999999, language = "german")
 
 dict_lm5<-generateDictionary(xDTM5,response5,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
   tm::weightTfIdf(x, normalize = TRUE), language = "german")
@@ -93,7 +76,7 @@ dict_ridge5<-generateDictionary(xDTM5,response5,modelType = "ridge", filterTerms
   tm::weightTfIdf(x, normalize = TRUE), language = "german")
 
 summary(dict_lasso5)
-#dict_lasso5
+dict_lasso5
 plot(dict_lasso5)
 
 summary(dict_lm5)
@@ -217,6 +200,15 @@ write(dict_lasso2, "dictionarys/lasso-2level.dict")
 write(dict_lm2, "dictionarys/lm-2level.dict")
 write(dict_enet2, "dictionarys/enet-2level.dict")
 write(dict_ridge2, "dictionarys/ridge-2level.dict")
+
+
+
+test_documents<-twitter_data_sentiment_5lvl$text
+test_response<-twitter_data_sentiment_5lvl$sentimentScore
+pred<-predict(dict_lasso5,test_documents)
+compareToResponse(pred,test_response)
+
+
 
 
 
