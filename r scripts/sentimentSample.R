@@ -57,23 +57,27 @@ twitter_data_sentiment_match<-twitter_data_sentiment%>%filter(isMatch =="1")
 twitter_data_sentiment_5lvl<-twitter_data_sentiment_match
 twitter_data_sentiment_5lvl<-twitter_data_sentiment_5lvl%>%select("sentimentScore", "text")
 
-#write.csv(twitter_data_sentiment_5lvl, "data/SentimentAnalyse_5LevelDict")
+write.csv(twitter_data_sentiment_5lvl, "data/SentimentAnalyse_5LevelDict.csv")
 
+response5<-twitter_data_sentiment_5lvl$sentimentScore
 x5<-transformIntoCorpus(twitter_data_sentiment_5lvl$text)
 xDTM5<-toDocumentTermMatrix(x5, language = "german", minWordLength = 3,
                           sparsity = NULL, removeStopwords = TRUE, stemming = FALSE)
-response5<-twitter_data_sentiment_5lvl$sentimentScore
 
+#1024
 dict_lasso5<-generateDictionary(xDTM5,response5,modelType = "lasso", sparsity = 0.99999999, language = "german")
 
-dict_lm5<-generateDictionary(xDTM5,response5,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
 
-dict_enet5<-generateDictionary(xDTM5,response5,modelType = "enet", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+dict_lm5<-generateDictionary(xDTM5,response5,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
-dict_ridge5<-generateDictionary(xDTM5,response5,modelType = "ridge", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+#1317
+dict_enet5<-generateDictionary(xDTM5,response5,modelType = "enet", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
+
+#6235
+dict_ridge5<-generateDictionary(xDTM5,response5,modelType = "ridge", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
+
+
+
 
 summary(dict_lasso5)
 dict_lasso5
@@ -93,10 +97,8 @@ plot(dict_ridge5)
 
 write(dict_lasso5, "dictionarys/lasso-5level.dict")
 write(dict_lm5, "dictionarys/lm-5level.dict")
-write(dict_enet5, "dictionarys/enet-5level.dict")
+write(dict_enet51, "dictionarys/enet-5level.dict")
 write(dict_ridge5, "dictionarys/ridge-5level.dict")
-
-
 
 
 ###########
@@ -111,21 +113,20 @@ write.csv(twitter_data_sentiment_3lvl, "data/SentimentAnalyse_3LevelDict")
 
 x3<-transformIntoCorpus(twitter_data_sentiment_3lvl$text)
 xDTM3<-toDocumentTermMatrix(x3, language = "german", minWordLength = 3,
-                            sparsity = NULL, removeStopwords = TRUE, stemming = FALSE,
-                            weighting = function(x) tm::weightTfIdf(x, normalize = FALSE))
+                            sparsity = NULL, removeStopwords = TRUE, stemming = FALSE)
 response3<-twitter_data_sentiment_3lvl$sentimentScore
 
-dict_lasso3<-generateDictionary(xDTM3,response3,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+#1241
+dict_lasso3<-generateDictionary(xDTM3,response3,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
-dict_lm3<-generateDictionary(xDTM3,response3,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+dict_lm3<-generateDictionary(xDTM3,response3,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
-dict_enet3<-generateDictionary(xDTM3,response3,modelType = "enet", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+#1514
+dict_enet3<-generateDictionary(xDTM3,response3,modelType = "enet", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
-dict_ridge3<-generateDictionary(xDTM3,response3,modelType = "ridge", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+#6235
+dict_ridge3<-generateDictionary(xDTM3,response3,modelType = "ridge", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
+
 
 summary(dict_lasso3)
 dict_lasso3
@@ -164,21 +165,16 @@ write.csv(twitter_data_sentiment_2lvl, "data/SentimentAnalyse_2LevelDict")
 
 x2<-transformIntoCorpus(twitter_data_sentiment_2lvl$text)
 xDTM2<-toDocumentTermMatrix(x2, language = "german", minWordLength = 3,
-                            sparsity = NULL, removeStopwords = TRUE, stemming = FALSE,
-                            weighting = function(x) tm::weightTfIdf(x, normalize = FALSE))
+                            sparsity = NULL, removeStopwords = TRUE, stemming = FALSE)
 response2<-twitter_data_sentiment_2lvl$sentimentScore
 
-dict_lasso2<-generateDictionary(xDTM2,response2,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+dict_lasso2<-generateDictionary(xDTM2,response2,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
-dict_lm2<-generateDictionary(xDTM2,response2,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+dict_lm2<-generateDictionary(xDTM2,response2,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
-dict_enet2<-generateDictionary(xDTM2,response2,modelType = "enet", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+dict_enet2<-generateDictionary(xDTM2,response2,modelType = "enet", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
-dict_ridge2<-generateDictionary(xDTM2,response2,modelType = "ridge", filterTerms = NULL, control = list(), sparsity = 0.99999999, weighting= function(x)
-  tm::weightTfIdf(x, normalize = TRUE), language = "german")
+dict_ridge2<-generateDictionary(xDTM2,response2,modelType = "ridge", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
 summary(dict_lasso2)
 dict_lasso2
