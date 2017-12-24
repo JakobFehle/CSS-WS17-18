@@ -97,7 +97,7 @@ plot(dict_ridge5)
 
 write(dict_lasso5, "dictionarys/lasso-5level.dict")
 write(dict_lm5, "dictionarys/lm-5level.dict")
-write(dict_enet51, "dictionarys/enet-5level.dict")
+write(dict_enet5, "dictionarys/enet-5level.dict")
 write(dict_ridge5, "dictionarys/ridge-5level.dict")
 
 
@@ -168,13 +168,18 @@ xDTM2<-toDocumentTermMatrix(x2, language = "german", minWordLength = 3,
                             sparsity = NULL, removeStopwords = TRUE, stemming = FALSE)
 response2<-twitter_data_sentiment_2lvl$sentimentScore
 
+#735
 dict_lasso2<-generateDictionary(xDTM2,response2,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
 dict_lm2<-generateDictionary(xDTM2,response2,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
+#1403
 dict_enet2<-generateDictionary(xDTM2,response2,modelType = "enet", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
+
 dict_ridge2<-generateDictionary(xDTM2,response2,modelType = "ridge", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
+
+
 
 summary(dict_lasso2)
 dict_lasso2
