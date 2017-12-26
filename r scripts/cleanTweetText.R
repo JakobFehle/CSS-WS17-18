@@ -15,6 +15,7 @@ cleanTweetText<-function(text){
     text<-gsub("<fc>","ü",text)
     text<-gsub("<df>","ss",text)
     text<-gsub("ß","ss",text)
+    text<-gsub("ã","ä",text)
     
     text<-gsub("<[^\\s]+>","",text)
     text<-gsub("<[^\\s]+","",text)
@@ -50,7 +51,7 @@ cleanTweetText<-function(text){
   return(text)
 }
 
-stemTweetText<-function(text) {
+stemTweetText<-function(text){
   require(stringr)
   require(stringi)
   library(tm)
@@ -62,4 +63,29 @@ stemTweetText<-function(text) {
   words<-wordStem(words,language="german")
   words<-paste(words,collapse=" ")
   return(words)
+}
+
+cleanCorpus<-function(text){
+  require(stringr)
+  require(stringi)
+  text<-gsub("<e4>","ä",text)
+  text<-gsub("<c4>","Ä",text)
+  text<-gsub("<d6>","Ö",text)
+  text<-gsub("<dc>","Ü",text)
+  text<-gsub("<f6>","ö",text)
+  text<-gsub("<fc>","ü",text)
+  text<-gsub("<df>","ss",text)
+  text<-gsub("ß","ss",text)
+  
+  text<-gsub("<[^\\s]+>","",text)
+  text<-gsub("<[^\\s]+","",text)
+  
+  text<-gsub("&amp;","",text)
+  
+  text<-stri_replace_all_fixed(text, 
+                               #c("?", "?", "?", "?", "?", "?"),
+                               c("\U00E4","\U00F6","\U00FC","\U00C4","\U00D6","\U00DC"),
+                               c("ae", "oe", "ue", "Ae", "Oe", "Ue"), vectorize_all = FALSE)
+  text<-str_replace_all(text,pattern="[^[:alnum:]\\#|\\@]",replacement=" ")
+  return(text)
 }
