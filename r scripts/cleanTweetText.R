@@ -1,3 +1,7 @@
+###
+# Cleaning Functions Changed often for different Cleaning approaches of different Imported Data
+###
+
 cleanTweetText<-function(text){
   require(stringr)
   require(stringi)
@@ -7,20 +11,22 @@ cleanTweetText<-function(text){
     mention_pattern <- "@([[:alnum:]]|[_])+"
     strip_RT_pattern<-"RT\\s@([[:alnum:]]|[_])+:"
 
-    text<-gsub("<e4>","ä",text)
-    text<-gsub("<c4>","Ä",text)
-    text<-gsub("<d6>","Ö",text)
-    text<-gsub("<dc>","Ü",text)
-    text<-gsub("<f6>","ö",text)
-    text<-gsub("<fc>","ü",text)
+    text<-gsub("<e4>","ae",text)
+    text<-gsub("<c4>","Ae",text)
+    text<-gsub("<d6>","Oe",text)
+    text<-gsub("<dc>","UE",text)
+    text<-gsub("<f6>","oe",text)
+    text<-gsub("<fc>","ue",text)
     text<-gsub("<df>","ss",text)
     text<-gsub("ß","ss",text)
-    text<-gsub("ã","ä",text)
+    text<-gsub("\U00DF","ss",text)
+    text<-gsub("\U00E3","ae",text)
     
     text<-gsub("<[^\\s]+>","",text)
     text<-gsub("<[^\\s]+","",text)
     
     text<-gsub("&amp;","",text)
+    text<-gsub(" amp "," ",text)
     
     text<-gsub("http[s]?\\://t\\.co/[^ ]{10}","",text)
     text<-gsub("http.*[^\\s]+","",text)
@@ -48,8 +54,14 @@ cleanTweetText<-function(text){
   #Satzzeichen und Special Characters außer # müssen weg
   text<-str_replace_all(text,pattern="[^[:alnum:]#]",replacement=" ")
   text<-str_to_lower(text)
+  text<-gsub("\\s+", " ",text)
+  text<-sub("\\s+$", "", text)
+  #text<-substr(text, 1, 30)
   return(text)
 }
+
+
+cleanTweetText("gute amp richtige entscheidung")
 
 stemTweetText<-function(text){
   require(stringr)
@@ -79,6 +91,7 @@ cleanCorpus<-function(text){
   
   text<-gsub("<[^\\s]+>","",text)
   text<-gsub("<[^\\s]+","",text)
+  text<-gsub("\U00E3","ä",text)
   
   text<-gsub("&amp;","",text)
   
@@ -87,5 +100,56 @@ cleanCorpus<-function(text){
                                c("\U00E4","\U00F6","\U00FC","\U00C4","\U00D6","\U00DC"),
                                c("ae", "oe", "ue", "Ae", "Oe", "Ue"), vectorize_all = FALSE)
   text<-str_replace_all(text,pattern="[^[:alnum:]\\#|\\@]",replacement=" ")
+  text<-gsub("\\s+", " ",text)
   return(text)
 }
+
+cleanTextForMerge<-function(text){
+  mention_pattern <- "@([[:alnum:]]|[_])+"
+  
+  text<-gsub("<e4>","ae",text)
+  text<-gsub("<c4>","Ae",text)
+  text<-gsub("<d6>","Oe",text)
+  text<-gsub("<dc>","UE",text)
+  text<-gsub("<f6>","oe",text)
+  text<-gsub("<fc>","ue",text)
+  text<-gsub("<df>","ss",text)
+  text<-gsub("ß","ss",text)
+  text<-gsub("\U00DF","ss",text)
+  text<-gsub("\U00E3","ae",text)
+  text<-gsub("<[^\\s]+>","",text)
+  text<-gsub("<[^\\s]+","",text)
+  
+  text<-gsub("&amp;","",text)
+  text<-gsub(" amp "," ",text)
+  
+  text<-gsub("http[s]?\\://t\\.co/[^ ]{10}","",text)
+  text<-gsub("http.*[^\\s]+","",text)
+  text<-gsub("htt[p]?\U2026","",text)
+  text<-gsub("https","",text)
+  text<-gsub("http","",text)
+  text<-gsub("\U2026","",text)
+  
+  #Die URLs und Mentions werden entfernt
+  text<-str_replace_all(text,pattern=mention_pattern,replacement="")
+  #Wörter die weniger als 3 Zeichen haben müssen weg außer sie haben #
+  text<-str_replace_all(text,pattern="(?<!#)\\b[a-zA-Z0-9]{1,2}\\b",replacement = "")
+  #depends on whether you wanna keep hashtags or not
+  text<-str_replace_all(text,pattern="#",replacement="")
+  #Konvertierung von Umlauten
+  text<-stri_replace_all_fixed(text, 
+                               #c("?", "?", "?", "?", "?", "?"),
+                               c("\U00E4","\U00F6","\U00FC","\U00C4","\U00D6","\U00DC"),
+                               c("ae", "oe", "ue", "Ae", "Oe", "Ue"), vectorize_all = FALSE)
+  
+  #Zahlen außer IN Hashtags
+  text<-str_replace_all(text,pattern="\\b\\d+\\b",replacement="")
+  #Satzzeichen und Special Characters außer # müssen weg
+  text<-str_replace_all(text,pattern="[^[:alnum:]#]",replacement=" ")
+  text<-str_to_lower(text)
+  text<-gsub("\\s+", " ",text)
+  text<-sub("\\s+$", "", text)
+  #text<-substr(text, 1, 30)
+  return(text)
+}
+
