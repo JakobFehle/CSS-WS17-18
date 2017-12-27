@@ -32,6 +32,17 @@ twitter_data_sentiment_jakob_snd<-twitter_data_sentiment_jakob_snd%>%filter(sent
 twitter_data_sentiment_jakob_snd$isMatch<-"1"
 twitter_data_sentiment_david_snd$isMatch<-"1"
 
+#temp Plot für Paper
+values <-c(nrow(twitter_data_sentiment%>%filter(isMatch=="1")), nrow(twitter_data_sentiment%>%filter(isMatch=="0.5")), nrow(twitter_data_sentiment
+                                                                                                                           %>%filter(isMatch=="0")))
+values
+go <-c("matched","polarity matched","not matched")
+basic_plot_data<-data.frame(go,values)
+basic_plot <- ggplot(basic_plot_data, aes(y = values,x =go))
+basic_plot +geom_bar(stat = "identity", fill='#890E1C') + labs(x = "", y="count of tweets")
+
+
+
 twitter_data_sentiment<-rbind(twitter_data_sentiment,twitter_data_sentiment_jakob_snd,twitter_data_sentiment_david_snd)
 
 twitter_data_sentiment<-twitter_data_sentiment%>%mutate(text=cleanTweetText(text))
