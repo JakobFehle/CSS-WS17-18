@@ -22,7 +22,6 @@ twitter_data2<-twitter_data[120001:255307,]
 twitter_data_cleaned1<-twitter_data_cleaned[1:120000,]
 twitter_data_cleaned2<-twitter_data_cleaned[120001:255307,]
 
-
 twitter_data1$ridge5<-as.numeric(unlist(predict(ridge_5lvl,twitter_data_cleaned1$text)))
 twitter_data2$ridge5<-as.numeric(unlist(predict(ridge_5lvl,twitter_data_cleaned2$text)))
 
@@ -63,6 +62,3 @@ twitter_data_WS<-twitter_data_WS%>%mutate(enet3=round(enet3, 3))
 twitter_data_WS<-twitter_data_WS%>%mutate(enet2=round(enet2, 3))
 
 write.table(twitter_data_WS, "twitter data/twitterDataWithSentiment.csv", sep=",",col.names = TRUE, row.names = FALSE)
-
-
-

@@ -25,7 +25,8 @@ cleanTweetText<-function(text){
     text<-gsub("<[^\\s]+>","",text)
     text<-gsub("<[^\\s]+","",text)
     
-    text<-gsub("&amp;","",text)
+    text<-gsub("&amp;"," ",text)
+    text<-gsub("&amp"," ",text)
     text<-gsub(" amp "," ",text)
     
     text<-gsub("http[s]?\\://t\\.co/[^ ]{10}","",text)
@@ -93,7 +94,9 @@ cleanCorpus<-function(text){
   text<-gsub("<[^\\s]+","",text)
   text<-gsub("\U00E3","ä",text)
   
-  text<-gsub("&amp;","",text)
+  text<-gsub("&amp;"," ",text)
+  text<-gsub("&amp"," ",text)
+  text<-gsub(" amp "," ",text)
   
   text<-stri_replace_all_fixed(text, 
                                #c("?", "?", "?", "?", "?", "?"),
@@ -120,7 +123,8 @@ cleanTextForMerge<-function(text){
   text<-gsub("<[^\\s]+>","",text)
   text<-gsub("<[^\\s]+","",text)
   
-  text<-gsub("&amp;","",text)
+  text<-gsub("&amp;"," ",text)
+  text<-gsub("&amp"," ",text)
   text<-gsub(" amp "," ",text)
   
   text<-gsub("http[s]?\\://t\\.co/[^ ]{10}","",text)

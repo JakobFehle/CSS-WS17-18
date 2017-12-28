@@ -7,6 +7,7 @@ library(readr)
 twitter_data<-read_csv("twitter data/twitter_data.csv", 
                        locale = locale())
 
+
 # Aufbereiten Twitter Datensatz
 twitter_data<-twitter_data_cleaned<-twitter_data%>%filter(lang=="de" | lang == "da")
 
@@ -27,11 +28,15 @@ twitter_data<-twitter_data_cleaned<-twitter_data[!grepl("\U2026", twitter_data$t
 twitter_data<-twitter_data%>%mutate(text=cleanCorpus(text))
 twitter_data$text<-gsub("<[^\\s]+>","",twitter_data$text)
 twitter_data_cleaned<-twitter_data_cleaned%>%mutate(text=cleanTweetText(text))
+twitter_data_cleaned$text<-gsub("[^[:graph:]]"," ",twitter_data_cleaned$text)
 twitter_data_cleaned$text<-iconv(twitter_data_cleaned$text, 'UTF-8','ASCII')
-
-
+twitter_data$text<-gsub("[^[:graph:]]"," ",twitter_data$text)
 
 # Stemming
 twitter_data_cleaned$text<-apply(twitter_data_cleaned[,"text"],1,function(x) stemTweetText(x))
 
+# Leere Zeilen Entfernen
+gr<-twitter_data_cleaned$text!="NA"
 
+twitter_data<-twitter_data[gr,]
+twitter_data_cleaned<-twitter_data_cleaned[gr,]
