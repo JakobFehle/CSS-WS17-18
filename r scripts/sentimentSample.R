@@ -73,11 +73,16 @@ write.csv(twitter_data_sentiment_5lvl, "data/SentimentAnalyse_5LevelDict.csv")
 response5<-twitter_data_sentiment_5lvl$sentimentScore
 x5<-transformIntoCorpus(twitter_data_sentiment_5lvl$text)
 xDTM5<-toDocumentTermMatrix(x5, language = "german", minWordLength = 3,
-                          sparsity = NULL, removeStopwords = TRUE, stemming = FALSE)
+                          sparsity = 0.99999999, removeStopwords = TRUE, stemming = FALSE)
 
+#Test
+#test_dict <- generateDictionary(x5,response5, modelType = "lasso", sparsity = 0.9999999, 
+#                                weighting = function(x) tm::weightTfIdf(x, normalize=TRUE))
+summary(test_dict)
 #1024
 dict_lasso5<-generateDictionary(xDTM5,response5,modelType = "lasso", sparsity = 0.99999999, language = "german")
 
+#824
 
 dict_lm5<-generateDictionary(xDTM5,response5,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
@@ -264,6 +269,7 @@ dict_lasso_5level <-read("dictionarys/lasso-5level.dict")
 dict_enet_2level <-read("dictionarys/enet-2level.dict")
 dict_enet_3level <-read("dictionarys/enet-3level.dict")
 dict_enet_5level <-read("dictionarys/enet-5level.dict")
+dict_ws <-read("dictionarys/sentiWSDict.dict")
 
 summary(dict_enet_5level)
 
