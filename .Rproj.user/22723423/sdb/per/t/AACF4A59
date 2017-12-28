@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "require(tidyverse)\nrequire(dplyr)\nlibrary(readr)\nlibrary(SentimentAnalysis)\n\nlasso_5lvl<-read(\"dictionarys/lasso-5level.dict\")\nlasso_3lvl<-read(\"dictionarys/lasso-3level.dict\")\nlasso_2lvl<-read(\"dictionarys/lasso-2level.dict\")\n\nridge_5lvl<-read(\"dictionarys/ridge-5level.dict\")\nridge_3lvl<-read(\"dictionarys/ridge-3level.dict\")\nridge_2lvl<-read(\"dictionarys/ridge-2level.dict\")\n\nenet_5lvl<-read(\"dictionarys/enet-5level.dict\")\nenet_3lvl<-read(\"dictionarys/enet-3level.dict\")\nenet_2lvl<-read(\"dictionarys/enet-2level.dict\")\n\n\n# Dataset is too big -> split\ntwitter_data1<-twitter_data[1:120000,]\ntwitter_data2<-twitter_data[120001:255307,]\ntwitter_data_cleaned1<-twitter_data_cleaned[1:120000,]\ntwitter_data_cleaned2<-twitter_data_cleaned[120001:255307,]\n\ntwitter_data1$ridge5<-as.numeric(unlist(predict(ridge_5lvl,twitter_data_cleaned1$text)))\ntwitter_data2$ridge5<-as.numeric(unlist(predict(ridge_5lvl,twitter_data_cleaned2$text)))\n\ntwitter_data1$ridge3<-as.numeric(unlist(predict(ridge_3lvl,twitter_data_cleaned1$text)))\ntwitter_data2$ridge3<-as.numeric(unlist(predict(ridge_3lvl,twitter_data_cleaned2$text)))\n\ntwitter_data1$ridge2<-as.numeric(unlist(predict(ridge_2lvl,twitter_data_cleaned1$text)))\ntwitter_data2$ridge2<-as.numeric(unlist(predict(ridge_2lvl,twitter_data_cleaned2$text)))\n\ntwitter_data1$enet5<-as.numeric(unlist(predict(enet_5lvl,twitter_data_cleaned1$text)))\ntwitter_data2$enet5<-as.numeric(unlist(predict(enet_5lvl,twitter_data_cleaned2$text)))\n\ntwitter_data1$enet3<-as.numeric(unlist(predict(enet_3lvl,twitter_data_cleaned1$text)))\ntwitter_data2$enet3<-as.numeric(unlist(predict(enet_3lvl,twitter_data_cleaned2$text)))\n\ntwitter_data1$enet2<-as.numeric(unlist(predict(enet_2lvl,twitter_data_cleaned1$text)))\ntwitter_data2$enet2<-as.numeric(unlist(predict(enet_2lvl,twitter_data_cleaned2$text)))\n\ntwitter_data1$lasso5<-as.numeric(unlist(predict(lasso_5lvl,twitter_data_cleaned1$text)))\ntwitter_data2$lasso5<-as.numeric(unlist(predict(lasso_5lvl,twitter_data_cleaned2$text)))\n\ntwitter_data1$lasso3<-as.numeric(unlist(predict(lasso_3lvl,twitter_data_cleaned1$text)))\ntwitter_data2$lasso3<-as.numeric(unlist(predict(lasso_3lvl,twitter_data_cleaned2$text)))\n\ntwitter_data1$lasso2<-as.numeric(unlist(predict(lasso_2lvl,twitter_data_cleaned1$text)))\ntwitter_data2$lasso2<-as.numeric(unlist(predict(lasso_2lvl,twitter_data_cleaned2$text)))\n\ntwitter_data_WS<-rbind(twitter_data1,twitter_data2)\ntwitter_data_WS<-twitter_data_WS%>%select(-c(inReplyToUser,lang,retweetCount,ID,favouriteCount,hashtagCount,mentionCount, inReplyToStatus,isSourceTweet,userID,createdAT,insertedAT,charCount,tokenCount,urlCount))\ntwitter_data_WS<-twitter_data_WS%>%mutate(lasso5=round(lasso5, 3))\ntwitter_data_WS<-twitter_data_WS%>%mutate(lasso3=round(lasso3, 3))\ntwitter_data_WS<-twitter_data_WS%>%mutate(lasso2=round(lasso2, 3))\ntwitter_data_WS<-twitter_data_WS%>%mutate(ridge5=round(ridge5, 3))\ntwitter_data_WS<-twitter_data_WS%>%mutate(ridge3=round(ridge3, 3))\ntwitter_data_WS<-twitter_data_WS%>%mutate(ridge2=round(ridge2, 3))\ntwitter_data_WS<-twitter_data_WS%>%mutate(enet5=round(enet5, 3))\ntwitter_data_WS<-twitter_data_WS%>%mutate(enet3=round(enet3, 3))\ntwitter_data_WS<-twitter_data_WS%>%mutate(enet2=round(enet2, 3))\n\nwrite.table(twitter_data_WS, \"twitter data/twitterDataWithSentiment.csv\", sep=\",\",col.names = TRUE, row.names = FALSE)\n",
+    "created" : 1514399245300.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2602614449",
+    "id" : "AACF4A59",
+    "lastKnownWriteTime" : 1514485533,
+    "last_content_update" : 1514485533501,
+    "path" : "D:/GitHub/CSS-WS17-18/r scripts/predictSentiment.R",
+    "project_path" : "r scripts/predictSentiment.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

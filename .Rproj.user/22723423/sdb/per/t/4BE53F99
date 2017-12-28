@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "source(\"r scripts/cleanTweetText.R\")\nrequire(tidyverse)\nrequire(dplyr)\nrequire(plyr)\nlibrary(readr)\n\ntwitter_data<-read_csv(\"twitter data/twitter_data.csv\", \n                       locale = locale())\n\n\n# Aufbereiten Twitter Datensatz\ntwitter_data<-twitter_data_cleaned<-twitter_data%>%filter(lang==\"de\" | lang == \"da\")\n\n#Entfernt alle Links (http(s) und alle Zeichen bis zum nächsten Leerzeichen)\ntwitter_data$text<-twitter_data_cleaned$text<-gsub(\"http[s]?://t\\\\.co/[^ ]{10}\",\"\",twitter_data_cleaned$text)\ntwitter_data$text<-twitter_data_cleaned$text<-gsub(\"http.*[^\\\\s]+\",\"\",twitter_data_cleaned$text)\ntwitter_data$text<-twitter_data_cleaned$text<-gsub(\"https\",\"\",twitter_data_cleaned$text)\ntwitter_data$text<-twitter_data_cleaned$text<-gsub(\"http\",\"\",twitter_data_cleaned$text)\n\n\n#Entfernt alle abgeschnittenen Links\ntwitter_data$text<-twitter_data_cleaned$text<-gsub(\"htt[p]?\\U2026\",\"\",twitter_data$text)\n\n#Entfernen von abgeschnittenen Tweets\ntwitter_data<-twitter_data_cleaned<-twitter_data[!grepl(\"\\U2026\", twitter_data$text),]\n\n#CleanTweetText auf den gesamten Twitter Datensatz\ntwitter_data<-twitter_data%>%mutate(text=cleanCorpus(text))\ntwitter_data$text<-gsub(\"<[^\\\\s]+>\",\"\",twitter_data$text)\ntwitter_data_cleaned<-twitter_data_cleaned%>%mutate(text=cleanTweetText(text))\ntwitter_data_cleaned$text<-gsub(\"[^[:graph:]]\",\" \",twitter_data_cleaned$text)\ntwitter_data_cleaned$text<-iconv(twitter_data_cleaned$text, 'UTF-8','ASCII')\ntwitter_data$text<-gsub(\"[^[:graph:]]\",\" \",twitter_data$text)\n\n# Stemming\ntwitter_data_cleaned$text<-apply(twitter_data_cleaned[,\"text\"],1,function(x) stemTweetText(x))\n\n# Leere Zeilen Entfernen\ngr<-twitter_data_cleaned$text!=\"NA\"\n\ntwitter_data<-twitter_data[gr,]\ntwitter_data_cleaned<-twitter_data_cleaned[gr,]\n",
+    "created" : 1514476171028.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2499670763",
+    "id" : "4BE53F99",
+    "lastKnownWriteTime" : 1514480986,
+    "last_content_update" : 1514480986712,
+    "path" : "D:/GitHub/CSS-WS17-18/r scripts/importCorpus.R",
+    "project_path" : "r scripts/importCorpus.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
