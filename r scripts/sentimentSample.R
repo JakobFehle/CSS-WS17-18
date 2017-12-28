@@ -73,7 +73,7 @@ write.csv(twitter_data_sentiment_5lvl, "data/SentimentAnalyse_5LevelDict.csv")
 response5<-twitter_data_sentiment_5lvl$sentimentScore
 x5<-transformIntoCorpus(twitter_data_sentiment_5lvl$text)
 xDTM5<-toDocumentTermMatrix(x5, language = "german", minWordLength = 3,
-                          sparsity = NULL, removeStopwords = TRUE, stemming = FALSE)
+                          sparsity = 0.99999999, removeStopwords = TRUE, stemming = FALSE)
 
 #997
 dict_lasso5<-generateDictionary(xDTM5,response5,modelType = "lasso", sparsity = 0.99999999, language = "german")
@@ -129,7 +129,7 @@ response3<-twitter_data_sentiment_3lvl$sentimentScore
 
 #1316
 dict_lasso3<-generateDictionary(xDTM3,response3,modelType = "lasso", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
-
+summary(dict_lasso3)
 dict_lm3<-generateDictionary(xDTM3,response3,modelType = "lm", filterTerms = NULL, control = list(), sparsity = 0.99999999, language = "german")
 
 #1547
@@ -241,4 +241,26 @@ dict_level5<-generateDictionary(x_level5,response_level5,modelType = "lasso", fi
                                   tm::weightTfIdf(x, normalize = TRUE))
 
 
-compareDictionaries(dict_level3,dict_level5)                    
+
+#Comparing dicts for chap 5
+
+#Ridged
+dict_ridge_2level <-read("dictionarys/ridge-2level.dict")
+dict_ridge_3level <-read("dictionarys/ridge-3level.dict")
+dict_ridge_5level <-read("dictionarys/ridge-5level.dict")
+dict_lasso_2level <-read("dictionarys/lasso-2level.dict")
+dict_lasso_3level <-read("dictionarys/lasso-3level.dict")
+dict_lasso_5level <-read("dictionarys/lasso-5level.dict")
+dict_enet_2level <-read("dictionarys/enet-2level.dict")
+dict_enet_3level <-read("dictionarys/enet-3level.dict")
+dict_enet_5level <-read("dictionarys/enet-5level.dict")
+dict_ws <-read("dictionarys/sentiWSDict.dict")
+
+summary(dict_enet_5level)
+
+                  
+
+compareDictionaries(dict_enet_2level,dict_enet_5level)
+compareDictionaries(dict_enet_3level,dict_enet_2level)  
+compareDictionaries(dict_enet_3level,dict_enet_5level)
+
