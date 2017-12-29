@@ -1,5 +1,7 @@
 require(tidyverse)
 require(dplyr)
+require(ggplot2)
+library(plotly)
 library(readr)
 library(SentimentAnalysis)
 
@@ -77,7 +79,7 @@ twitter_data_WS<-twitter_data_WS%>%mutate(enet3=round(enet3, 3))
 #twitter_data_WS<-twitter_data_WS%>%mutate(enet2=round(enet2, 3))
 twitter_data_WS<-twitter_data_WS%>%mutate(sentiWS=round(sentiWS, 3))
 
-twitter_data_WS<-twitter_data_WS%>%mutate(sentiStrenth=as.numeric(positveSentimentScore)+as.numeric(negativeSentimentScore))
+twitter_data_WS<-twitter_data_WS%>%mutate(sentiStrength=as.numeric(positveSentimentScore)+as.numeric(negativeSentimentScore))
 twitter_data_WS<-twitter_data_WS%>%select(-c(positveSentimentScore,negativeSentimentScore))
 
 write.table(twitter_data_WS, "twitter data/twitterDataWithSentiment3Level.csv", sep=",",col.names = TRUE, row.names = FALSE)
@@ -99,15 +101,112 @@ DictCorrelation<-DictCorrelation%>%select(-c(Var2))
 colnames(DictCorrelation)<-c("Vars","LassoRidge")
 DictCorrelation$LassoEnet<-unlist(compareToResponse(pred_lasso3,twitter_data_WS$enet3))
 DictCorrelation$LassoSentiWS<-unlist(compareToResponse(pred_lasso3,twitter_data_WS$sentiWS))
-DictCorrelation$LassoSentiStrenth<-unlist(compareToResponse(pred_lasso3,twitter_data_WS$sentiStrenth))
+DictCorrelation$LassoSentiStrenth<-unlist(compareToResponse(pred_lasso3,twitter_data_WS$sentiStrength))
 
 DictCorrelation$RidgeEnet<-unlist(compareToResponse(pred_ridge3,twitter_data_WS$enet3))
 DictCorrelation$RidgeSentiWS<-unlist(compareToResponse(pred_ridge3,twitter_data_WS$sentiWS))
-DictCorrelation$RidgeSentiStrenth<-unlist(compareToResponse(pred_ridge3,twitter_data_WS$sentiStrenth))
+DictCorrelation$RidgeSentiStrenth<-unlist(compareToResponse(pred_ridge3,twitter_data_WS$sentiStrength))
 
 DictCorrelation$EnetSentiWS<-unlist(compareToResponse(pred_enet3,twitter_data_WS$sentiWS))
-DictCorrelation$EnetSentiStrenth<-unlist(compareToResponse(pred_enet3,twitter_data_WS$sentiStrenth))
+DictCorrelation$EnetSentiStrenth<-unlist(compareToResponse(pred_enet3,twitter_data_WS$sentiStrength))
 
-DictCorrelation$SentiWSSentiStrenth<-unlist(compareToResponse(pred_sentiWS,twitter_data_WS$sentiStrenth))
+DictCorrelation$SentiWSSentiStrength<-unlist(compareToResponse(pred_sentiWS,twitter_data_WS$sentiStrength))
 
 write.table(DictCorrelation, "twitter data/dictCorrelation.csv",sep=",",col.names = TRUE, row.names = FALSE)
+
+plotSentimentResponse(pred_lasso3,twitter_data_WS$enet3)
+hist(twitter_data_WS$enet3,breaks = c(seq(-4,4,0.1)))
+hist(twitter_data_WS$ridge3,breaks = c(seq(-4,4,0.1)))
+hist(twitter_data_WS$lasso3,breaks = c(seq(-4,4,0.1)))
+hist(twitter_data_WS$sentiStrenth,breaks = c(seq(-4,4,0.1)))
+hist(twitter_data_sentiment_match$sentimentScore, breaks = c(seq(-1,1,0.5)))
+
+##
+gg_b <- ggplot_build(
+  ggplot() + geom_histogram(aes(x = twitter_data_WS$ridge3), binwidth=.1)
+)
+
+bin <- dim(gg_b$data[[1]])[1]
+cols<-c("red","green")
+colGradient <- colorRampPalette(cols)
+cut.cols <- colGradient(bin)
+cuts <- cut(twitter_data_WS$ridge3,bin)
+names(cuts) <- sapply(cuts,function(t) cut.cols[which(as.character(t) == levels(cuts))])
+
+ggplot(twitter_data_WS,aes(ridge3,fill=cut(ridge3,bin)))+
+  geom_histogram(show.legend=FALSE,bins=bin)+
+    scale_color_manual(values=cut.cols,labels=levels(cuts))+
+      scale_fill_manual(values=cut.cols,labels=levels(cuts))
+
+##
+gg_b <- ggplot_build(
+  ggplot() + geom_histogram(aes(x = twitter_data_sentiment_match$sentimentScore), binwidth=.5)
+)
+
+bin <- dim(gg_b$data[[1]])[1]
+cols<-c("red","green")
+colGradient <- colorRampPalette(cols)
+cut.cols <- colGradient(bin)
+cuts <- cut(twitter_data_sentiment_match$sentimentScore,bin)
+names(cuts) <- sapply(cuts,function(t) cut.cols[which(as.character(t) == levels(cuts))])
+
+ggplot(twitter_data_sentiment_match,aes(sentimentScore,fill=cut(sentimentScore,bin)))+
+  geom_histogram(show.legend=FALSE,bins=bin)+
+  scale_color_manual(values=cut.cols,labels=levels(cuts))+
+  scale_fill_manual(values=cut.cols,labels=levels(cuts))+
+  labs(y="Anzahl",x="Sentiment")
+
+twitter_data_WS2<-aggregate(twitter_data_WS[, 7:11],list(twitter_data_WS$weeksTillElection),mean)
+twitter_data_WS3<-aggregate(twitter_data_WS[, 7:11],list(twitter_data_WS$party),mean)
+
+ggplot(twitter_data_WS3, aes(x=Group.1,y=ridge3))+
+  geom_bar(aes(fill=ridge3),stat="identity",show.legend=FALSE)+
+  scale_fill_gradient2(low="red",high="green",mid="yellow")+
+  labs(y="Sentiment",x="Partei")
+
+totalTweets<-nrow(twitter_data_WS)
+values=c("numPositiveTweets","numNegativeTweets","numNeutral/Undefined")  
+twitterAbdeckung<-data.frame(values)
+(nrow(twitter_data_WS%>%filter(lasso3 <0)))
+
+twitterAbdeckung$lasso<-c((nrow(twitter_data_WS%>%filter(lasso3 > 0))),(nrow(twitter_data_WS%>%filter(lasso3 < 0))),(nrow(twitter_data_WS%>%filter(lasso3 ==0))))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(lassoP=c(lasso/totalTweets*100))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(lassoP=round(lassoP,2))
+
+twitterAbdeckung$ridge<-c((nrow(twitter_data_WS%>%filter(ridge3 > 0))),(nrow(twitter_data_WS%>%filter(ridge3 < 0))),(nrow(twitter_data_WS%>%filter(ridge3 ==0))))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(ridgeP=c(ridge/totalTweets*100))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(ridgeP=round(ridgeP,2))
+
+twitterAbdeckung$enet<-c((nrow(twitter_data_WS%>%filter(enet3 > 0))),(nrow(twitter_data_WS%>%filter(enet3 < 0))),(nrow(twitter_data_WS%>%filter(enet3 ==0))))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(enetP=c(enet/totalTweets*100))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(enetP=round(enetP,2))
+
+twitterAbdeckung$sentiWS<-c((nrow(twitter_data_WS%>%filter(sentiWS > 0))),(nrow(twitter_data_WS%>%filter(sentiWS < 0))),(nrow(twitter_data_WS%>%filter(sentiWS ==0))))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(sentiWSP=c(sentiWS/totalTweets*100))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(sentiWSP=round(sentiWSP,2))
+
+twitterAbdeckung$sentiStrength<-c((nrow(twitter_data_WS%>%filter(sentiStrength > 0))),(nrow(twitter_data_WS%>%filter(sentiStrength < 0))),(nrow(twitter_data_WS%>%filter(sentiStrength ==0))))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(sentiStrengthP=c(sentiStrength/totalTweets*100))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(sentiStrengthP=round(sentiStrengthP,2))
+
+twitterAbdeckung<-twitterAbdeckung%>%select(-c(lassoP,ridgeP,enetP,sentiWSP,sentiStrengthP))
+
+twitterAbdeckung<-twitterAbdeckung%>%mutate(ridge=as.numeric(ridge))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(lasso=as.numeric(lasso))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(enet=as.numeric(enet))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(sentiWS=as.numeric(sentiWS))
+twitterAbdeckung<-twitterAbdeckung%>%mutate(sentiStrength=as.numeric(ridge))
+
+twitterAbdeckung2 <- twitterAbdeckung[,-1]
+rownames(twitterAbdeckung2) <- twitterAbdeckung[,1]
+twitterAbdeckung<-twitterAbdeckung2
+
+
+
+twitterAbdeckungTransform<-data.frame(t(twitterAbdeckung))
+
+
+plot_ly(twitterAbdeckungTransform, x = rownames(twitterAbdeckungTransform), y = ~numPositiveTweets, type = 'bar', name = 'positive Tweets') %>%
+  add_trace(y = ~numNegativeTweets, name = 'negative Tweets') %>%
+  layout(yaxis = list(range=c(0,200000), title = "Anzahl Tweets"), barmode = 'group')
+
