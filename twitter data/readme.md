@@ -1,2 +1,2 @@
-Alle per Lexika in diesen Dateien erstellten Sentimentwerte sind OUTDATED.
+Die meisten per Lexika in diesen Dateien erstellten Sentimentwerte sind OUTDATED.
 Allerdings können die anderen Spalten für Analysen hergenommen werden.
