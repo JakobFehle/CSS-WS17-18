@@ -1,6 +1,7 @@
 require(tidyverse)
 require(dplyr)
 require(ggplot2)
+require(irr)
 library(plotly)
 library(readr)
 library(SentimentAnalysis)
@@ -8,10 +9,14 @@ library(SentimentAnalysis)
 lasso_5lvl<-read("dictionarys/lasso-5level.dict")
 lasso_3lvl<-read("dictionarys/lasso-3level.dict")
 lasso_2lvl<-read("dictionarys/lasso-2level.dict")
+summary(enet_5lvl)
+
+compareDictionaries(enet_2lvl,enet_3lvl)
 
 ridge_5lvl<-read("dictionarys/ridge-5level.dict")
 ridge_3lvl<-read("dictionarys/ridge-3level.dict")
 ridge_2lvl<-read("dictionarys/ridge-2level.dict")
+
 
 enet_5lvl<-read("dictionarys/enet-5level.dict")
 enet_3lvl<-read("dictionarys/enet-3level.dict")
@@ -94,7 +99,7 @@ pred_lasso3<-rbind(pred_lasso31,pred_lasso32)
 pred_ridge3<-rbind(pred_ridge31,pred_ridge32)
 pred_enet3<-rbind(pred_enet31,pred_enet32)
 pred_sentiWS<-rbind(pred_sentiWS1,pred_sentiWS2)
-
+compareToResponse(pred_lasso3,twitter_data_WS$sentiStrength)
 DictCorrelation<-unlist(compareToResponse(pred_lasso3,twitter_data_WS$ridge3))
 DictCorrelation<-as.data.frame(as.table(DictCorrelation))
 DictCorrelation<-DictCorrelation%>%select(-c(Var2))
@@ -210,3 +215,10 @@ plot_ly(twitterAbdeckungTransform, x = rownames(twitterAbdeckungTransform), y = 
   add_trace(y = ~numNegativeTweets, name = 'negative Tweets') %>%
   layout(yaxis = list(range=c(0,200000), title = "Anzahl Tweets"), barmode = 'group')
 
+twitterDataBaselineWithAllDicts<-twitterDataBaselineWithAllDicts%>%mutate(sentiStrength = positveSentimentScore + negativeSentimentScore)
+twitterDataBaselineWithAllDicts$sentimentScore<-convertToDirection(twitterDataBaselineWithAllDicts$sentimentScore)
+twitterDataBaselineWithAllDicts$ridge5<-convertToDirection(twitterDataBaselineWithAllDicts$ridge5)
+twitterDataBaselineWithAllDicts$lasso3<-convertToDirection(twitterDataBaselineWithAllDicts$lasso3)
+twitterDataBaselineWithAllDicts<-twitterDataBaselineWithAllDicts%>%mutate(agree=ifelse(twitterDataBaselineWithAllDicts$sentimentScore == twitterDataBaselineWithAllDicts$sentiStrength,1,0))
+nrow(twitterDataBaselineWithAllDicts%>%filter(agree==1))/nrow(twitterDataBaselineWithAllDicts)
+agree(twitterDataBaselineWithAllDicts[,c("sentimentScore","ridge5")])
